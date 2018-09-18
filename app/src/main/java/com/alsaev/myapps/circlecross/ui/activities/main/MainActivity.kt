@@ -2,6 +2,8 @@ package com.alsaev.myapps.circlecross.ui.activities.main
 
 import android.support.v7.app.AppCompatActivity
 import android.os.Bundle
+import android.view.ViewGroup
+import android.widget.RadioButton
 import com.alsaev.myapps.circlecross.R
 import kotlinx.android.synthetic.main.activity_main.*
 
@@ -28,5 +30,34 @@ class MainActivity : AppCompatActivity(), MainContract.Vview {
     override fun onDestroy() {
         presenter.onDestroy()
         super.onDestroy()
+    }
+
+    override fun addClient(id: Int) {
+        runOnUiThread {
+            val btn = RadioButton(this)
+            btn.layoutParams = ViewGroup.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT)
+            btn.text = id.toString()
+            btn.tag = id.toString()
+            clients_container.addView(btn)
+        }
+    }
+
+    override fun removeClient(id: Int) {
+        runOnUiThread {
+            val view = clients_container.findViewWithTag<RadioButton>(id.toString())
+            if (view != null) clients_container.removeView(view)
+        }
+    }
+
+    override fun addListOfClient(list: List<String>) {
+        runOnUiThread {
+            list.forEach {
+                val btn = RadioButton(this)
+                btn.layoutParams = ViewGroup.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT)
+                btn.text = it
+                btn.tag = it
+                clients_container.addView(btn)
+            }
+        }
     }
 }
