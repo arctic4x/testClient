@@ -13,5 +13,6 @@ interface MainContract {
         fun init()
         fun onDestroy()
         fun submitMessage(message: String)
+        fun submitMessage(message: String, clientId: String)
     }
 }

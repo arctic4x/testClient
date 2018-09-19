@@ -1,5 +1,7 @@
 package com.alsaev.myapps.circlecross.ui.activities.main
 
+import android.os.Handler
+
 class MainPresenter(val vview: MainContract.Vview) : MainContract.Presenter {
 
     private var socketClient: SocketClient? = null
@@ -26,7 +28,12 @@ class MainPresenter(val vview: MainContract.Vview) : MainContract.Presenter {
             override fun removeClient(id: String) {
                 try {
                     vview.removeClient(Integer.parseInt(id))
-                }catch (e: NumberFormatException){}
+                } catch (e: NumberFormatException) {
+                }
+            }
+
+            override fun showMessageFromClient(clientId: String, message: String) {
+                vview.showMessage("Message from client $clientId: $message")
             }
         })
         socketClient!!.start()
@@ -38,5 +45,9 @@ class MainPresenter(val vview: MainContract.Vview) : MainContract.Presenter {
 
     override fun submitMessage(message: String) {
         socketClient?.sendMessage(message)
+    }
+
+    override fun submitMessage(message: String, clientId: String) {
+        socketClient?.sendMessage(message, clientId)
     }
 }

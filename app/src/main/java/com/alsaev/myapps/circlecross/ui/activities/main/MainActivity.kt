@@ -18,8 +18,17 @@ class MainActivity : AppCompatActivity(), MainContract.Vview {
         presenter.init()
 
         btn_submit.setOnClickListener {
-            presenter.submitMessage(et_text.text.toString())
+            val checkedBtnId = clients_container.checkedRadioButtonId
+            val checkedBtn = findViewById<RadioButton>(checkedBtnId)
+            if (checkedBtn.tag != null && checkedBtn.tag.toString().isNotBlank()) {
+                presenter.submitMessage(et_text.text.toString(), checkedBtn.tag.toString())
+            } else
+                presenter.submitMessage(et_text.text.toString())
             et_text.text.clear()
+        }
+
+        clients_container.setOnCheckedChangeListener { group, checkedId ->
+            findViewById<RadioButton>(checkedId)
         }
     }
 

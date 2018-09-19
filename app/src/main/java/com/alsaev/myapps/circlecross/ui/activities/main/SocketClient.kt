@@ -3,18 +3,19 @@ package com.alsaev.myapps.circlecross.ui.activities.main
 import android.util.Log
 import java.io.*
 import java.net.InetAddress
-import java.net.ServerSocket
 import java.net.Socket
 
 const val MA_PORT = 6969
 
 private const val OUT_EXIT = "EXIT"
 private const val OUT_MESSAGE = "MESSAGE"
+private const val OUT_MESSAGE_TO_CLIENT = "MESSAGE_TO_CLIENT"
 
 private const val IN_MESSAGE = "MESSAGE"
 private const val IN_LIST_OF_CLIENTS = "LIST_OF_CLIENTS"
 private const val IN_ADD_CLIENT = "ADD_CLIENT"
 private const val IN_REMOVE_CLIENT = "REMOVE_CLIENT"
+private const val IN_MESSAGE_FROM_CLIENT = "MESSAGE_FROM_CLIENT"
 
 class SocketClient() : Thread() {
     private var isRunning = false
@@ -26,7 +27,7 @@ class SocketClient() : Thread() {
     override fun run() {
         try {
             Log.d("socket", "try to find server")
-            val address = InetAddress.getByName("10.0.0.102")
+            val address = InetAddress.getByName("192.168.0.112")
 
             try {
                 Log.d("socket", "try to connect")
@@ -51,16 +52,19 @@ class SocketClient() : Thread() {
                         Log.d("socket", command)
                         when (command) {
                             IN_MESSAGE -> {
-                                listener?.showMessage(readerStream!!.readLine())
+                                showMessage()
                             }
                             IN_ADD_CLIENT -> {
-                                listener?.addClient(readerStream!!.readLine())
+                                addClient()
                             }
                             IN_LIST_OF_CLIENTS -> {
-                                listener?.setListOfClient(readerStream!!.readLine())
+                                setListOfClient()
                             }
                             IN_REMOVE_CLIENT -> {
-                                listener?.removeClient(readerStream!!.readLine())
+                                removeClient()
+                            }
+                            IN_MESSAGE_FROM_CLIENT -> {
+                                showMessageFromCliet()
                             }
                         }
                     }
@@ -78,12 +82,52 @@ class SocketClient() : Thread() {
         }
     }
 
+    private fun showMessageFromCliet() {
+        val clientId = readerStream!!.readLine()
+        val message = readerStream!!.readLine()
+        listener?.showMessageFromClient(clientId, message)
+
+    }
+
+    private fun removeClient() {
+        val clientId = readerStream!!.readLine()
+        listener?.removeClient(clientId)
+    }
+
+    private fun setListOfClient() {
+        val listOfClient = readerStream!!.readLine()
+        listener?.setListOfClient(listOfClient)
+    }
+
+    private fun addClient() {
+        val clientId = readerStream!!.readLine()
+        listener?.addClient(clientId)
+    }
+
+    private fun showMessage() {
+        val message = readerStream!!.readLine()
+        listener?.showMessage(message)
+    }
+
+    fun sendMessage(message: String, clientId: String) {
+        Thread {
+            if (writerStream != null && !writerStream!!.checkError()) {
+                writerStream!!.println(OUT_MESSAGE_TO_CLIENT)
+                writerStream!!.println(clientId)
+                writerStream!!.println(message)
+                writerStream!!.flush()
+            }
+        }.start()
+    }
+
     fun sendMessage(message: String) {
-        if (writerStream != null && !writerStream!!.checkError()) {
-            writerStream!!.println(OUT_MESSAGE)
-            writerStream!!.println(message)
-            writerStream!!.flush()
-        }
+        Thread {
+            if (writerStream != null && !writerStream!!.checkError()) {
+                writerStream!!.println(OUT_MESSAGE)
+                writerStream!!.println(message)
+                writerStream!!.flush()
+            }
+        }.start()
     }
 
     fun setSocketListener(socketListener: SocketListener) {
@@ -91,9 +135,11 @@ class SocketClient() : Thread() {
     }
 
     fun onDestroy() {
-        writerStream!!.println(OUT_EXIT)
-        writerStream!!.flush()
-        isRunning = false
+        Thread {
+            writerStream!!.println(OUT_EXIT)
+            writerStream!!.flush()
+            isRunning = false
+        }.start()
     }
 
     interface SocketListener {
@@ -101,5 +147,6 @@ class SocketClient() : Thread() {
         fun addClient(id: String)
         fun setListOfClient(listOfClient: String)
         fun removeClient(id: String)
+        fun showMessageFromClient(clientId: String, message: String)
     }
 }
